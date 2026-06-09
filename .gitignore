@@ -1,0 +1,13 @@
+.venv/
+.env
+certs/
+__pycache__/
+*.pyc
+data/
+modelo_movimiento.keras
+entrenamiento.png
+terraform/.build/
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
