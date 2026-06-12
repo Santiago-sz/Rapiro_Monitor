@@ -6,8 +6,8 @@ resource "aws_iot_certificate" "rapiro" {
   active = true
 }
 
-resource "aws_iot_policy" "rapiro_publish" {
-  name = "${var.project_name}-publish-policy"
+resource "aws_iot_policy" "rapiro_policy" {
+  name = "${var.project_name}-rpi-policy"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -17,9 +17,22 @@ resource "aws_iot_policy" "rapiro_publish" {
         Resource = "arn:aws:iot:${var.aws_region}:*:client/${aws_iot_thing.rapiro.name}"
       },
       {
-        Effect   = "Allow"
-        Action   = ["iot:Publish"]
-        Resource = "arn:aws:iot:${var.aws_region}:*:topic/rapiro/events/*"
+        Effect = "Allow"
+        Action = ["iot:Publish"]
+        Resource = [
+          "arn:aws:iot:${var.aws_region}:*:topic/rapiro/frames",
+          "arn:aws:iot:${var.aws_region}:*:topic/rapiro/events/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = ["iot:Subscribe"]
+        Resource = "arn:aws:iot:${var.aws_region}:*:topicfilter/rapiro/commands"
+      },
+      {
+        Effect = "Allow"
+        Action = ["iot:Receive"]
+        Resource = "arn:aws:iot:${var.aws_region}:*:topic/rapiro/commands"
       }
     ]
   })
@@ -31,12 +44,12 @@ resource "aws_iot_thing_principal_attachment" "rapiro" {
 }
 
 resource "aws_iot_policy_attachment" "rapiro" {
-  policy = aws_iot_policy.rapiro_publish.name
+  policy = aws_iot_policy.rapiro_policy.name
   target = aws_iot_certificate.rapiro.arn
 }
 
-resource "aws_iot_topic_rule" "events_to_lambda" {
-  name        = "${replace(var.project_name, "-", "_")}_events_rule"
+resource "aws_iot_topic_rule" "alerts_to_lambda" {
+  name        = "${replace(var.project_name, "-", "_")}_alerts_rule"
   enabled     = true
   sql         = "SELECT * FROM 'rapiro/events/+'"
   sql_version = "2016-03-23"

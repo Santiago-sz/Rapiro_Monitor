@@ -3,6 +3,16 @@ output "iot_endpoint_hint" {
   value       = "Ejecutar: aws iot describe-endpoint --endpoint-type iot:Data-ATS"
 }
 
+output "ec2_public_ip" {
+  description = "IP pública del servidor EC2 — usala para SSH y para configurar el RPi"
+  value       = aws_instance.rapiro_server.public_ip
+}
+
+output "ec2_ssh_command" {
+  description = "Comando para conectarte al EC2"
+  value       = "ssh -i <tu-key.pem> ubuntu@${aws_instance.rapiro_server.public_ip}"
+}
+
 output "iot_thing_arn" {
   value = aws_iot_thing.rapiro.arn
 }

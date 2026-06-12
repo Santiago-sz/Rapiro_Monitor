@@ -67,7 +67,7 @@ resource "aws_lambda_permission" "allow_iot" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.alert_handler.function_name
   principal     = "iot.amazonaws.com"
-  source_arn    = aws_iot_topic_rule.events_to_lambda.arn
+  source_arn    = aws_iot_topic_rule.alerts_to_lambda.arn
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
