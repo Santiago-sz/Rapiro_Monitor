@@ -1,7 +1,21 @@
-tensorflow>=2.15
-opencv-python>=4.9.0
+# Base / vision
 numpy>=1.24
-psycopg2-binary>=2.9
-paho-mqtt>=2.0
-pyserial>=3.5
+opencv-python>=4.9.0
 python-dotenv>=1.0
+
+# CNN / ML training and EC2 inference
+tensorflow>=2.15
+matplotlib>=3.8
+
+# PostgreSQL used by EC2/cloud processor
+psycopg2-binary>=2.9
+
+# MQTT clients
+paho-mqtt>=2.0
+awsiotsdk>=1.21
+
+# Raspberry/Rapiro serial control
+pyserial>=3.5
+
+# Lambda/AWS helpers
+boto3>=1.34

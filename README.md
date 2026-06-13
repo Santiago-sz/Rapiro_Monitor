@@ -381,3 +381,92 @@ CAMERA_INDEX=0
 - [x] Infraestructura AWS lista para desplegar (Terraform)
 - [x] Publisher MQTT listo (desactivado hasta tener los certs)
 - [x] Control serial del Rapiro listo (desactivado hasta tener el RPi)
+
+---
+
+## Arquitectura actual: Raspberry liviana + EC2 inteligente
+
+El proyecto esta organizado para la arquitectura 2:
+
+```text
+Raspberry Pi + Rapiro
+  - captura frames de camara
+  - publica frames en AWS IoT Core: rapiro/frames
+  - escucha comandos en AWS IoT Core: rapiro/commands
+  - ejecuta comandos seriales en el Rapiro
+
+EC2 / cloud_processor
+  - recibe frames desde rapiro/frames
+  - ejecuta la CNN
+  - estima luz
+  - detecta caras
+  - calcula anomalias
+  - aprende patrones por hora
+  - guarda eventos y patrones en PostgreSQL/RDS
+  - publica comandos en rapiro/commands
+  - publica eventos en rapiro/events/{event_id}
+
+AWS
+  - IoT Core comunica Raspberry, EC2 y Lambda
+  - Lambda consume eventos
+  - DynamoDB guarda historial cloud
+  - SNS envia alertas
+```
+
+Organizacion de carpetas:
+
+```text
+edge_device/
+  main.py                 # flujo local legado/todo-en-uno para Raspberry
+  rapiro_controller.py    # control serial del Rapiro
+  setup_rpi.sh            # instalacion en Raspberry
+
+cloud_processor/
+  ec2_server.py           # entrada principal del procesador EC2
+  config.py               # configuracion compartida de cloud/DB/MQTT
+  db.py                   # PostgreSQL/RDS
+  setup_db.py             # setup de DB
+  pattern_store.py        # patrones por hora y anomalias
+  face_detector.py        # deteccion de caras
+  light_estimator.py      # estimacion de luz
+  mqtt_publisher.py       # publicacion MQTT legacy/local
+
+ml/
+  1_collect_data.py       # dataset
+  2_train.py              # entrenamiento
+  3_detect.py             # prueba de CNN
+  demo.py                 # demo local sin DB/AWS
+  data/                   # imagenes de entrenamiento
+  artifacts/              # modelo_movimiento.keras y pesos.weights.h5
+
+simulators/
+  rpi_simulator.py        # simula la Raspberry desde Windows
+
+aws/
+  terraform/              # infraestructura AWS y Lambda
+```
+
+Mejoras siguientes recomendadas, sin implementar todavia:
+
+```text
+edge_device/camera_client.py
+  Cliente real de Raspberry para publicar frames y recibir comandos.
+
+edge_device/mqtt_device_client.py
+  Conexion MQTT con certificados X.509 del dispositivo.
+
+cloud_processor/vision_pipeline.py
+  Pipeline frame -> luz/cara/movimiento para bajar complejidad de ec2_server.py.
+
+cloud_processor/decision_engine.py
+  Reglas de decision comando/anomalia -> #M0/#M1/#M6.
+
+shared/topics.py
+  Constantes de topics MQTT compartidas por Raspberry, EC2 y Lambda.
+
+shared/event_schema.py
+  Contrato unico del JSON de eventos.
+
+requirements-edge.txt y requirements-cloud.txt
+  Dependencias separadas por entorno.
+```
